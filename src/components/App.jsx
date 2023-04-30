@@ -62,7 +62,6 @@ export function App() {
   };
 
   useEffect(() => {
-    console.log('useEffect второй раз');
     localStorage.setItem('contacts', JSON.stringify(contacts));
     setContacts(contacts);
   }, [contacts]);
