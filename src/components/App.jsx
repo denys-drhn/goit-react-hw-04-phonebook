@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { nanoid } from 'nanoid';
 import Section from './Section/Section';
 import ContactForm from './ContactForm/ContactForm';
@@ -7,60 +7,53 @@ import Filter from './Filter/Filter';
 import Notification from './Notofication/Notification';
 import startContacts from '../contacts.json';
 
-export class App extends Component {
-  state = {
-    contacts: [],
-    filter: '',
-  };
+export function App() {
+  const [contacts, setContacts] = useState(
+    JSON.parse(localStorage.getItem('contacts')) ??
+      localStorage.setItem('contacts', JSON.stringify(startContacts))
+  );
+  const [filter, setFilter] = useState('');
 
   //add contact + Alert =========================================
-  addContact = ({ name, number }) => {
-    const { contacts } = this.state;
-
+  const addContact = ({ name, number }) => {
     // Check if contact with same name already exists
     const existingContact = contacts.find(
       contact => contact.name.toLowerCase() === name.toLowerCase()
     );
-
     if (existingContact) {
       alert(`${name} is already in contacts.`);
       return;
     }
     // Check if contact with same number already exists
     const existingNumber = contacts.find(contact => contact.number === number);
-
     if (existingNumber) {
       alert(`Contact with number ${number} already exists.`);
       return;
     }
-
     const contact = {
       id: nanoid(),
       name,
       number,
     };
-
-    this.setState(prevState => ({
-      contacts: [contact, ...prevState.contacts],
-    }));
+    setContacts(prevState => [contact, ...prevState]);
   };
 
   //delete contact ========================================
-  deleteContact = contactid => {
-    this.setState(prevState => ({
-      contacts: prevState.contacts.filter(contact => contact.id !== contactid),
-    }));
+  const deleteContact = contactid => {
+    setContacts(prevState =>
+      prevState.filter(contact => contact.id !== contactid)
+    );
   };
 
   // contacts filter ==============================================
-  changeFilter = event => {
-    this.setState({ filter: event.currentTarget.value });
+  const changeFilter = event => {
+    setFilter(event.currentTarget.value);
   };
 
   // method filtered contacts for render + ! lowerCase x2 ========
 
-  getVisibleContacts = () => {
-    const { contacts, filter } = this.state;
+  const getVisibleContacts = () => {
+    //  const { contacts, filter } = this.state;
     const normalizedFilter = filter.toLowerCase();
 
     return contacts.filter(contact =>
@@ -68,50 +61,32 @@ export class App extends Component {
     );
   };
 
-  // componentDidMount()
+  useEffect(() => {
+    console.log('useEffect второй раз');
+    localStorage.setItem('contacts', JSON.stringify(contacts));
+    setContacts(contacts);
+  }, [contacts]);
 
-  componentDidMount() {
-    const contacts = localStorage.getItem('contacts');
-    const parsedContacts = JSON.parse(contacts);
+  const filteredContacts = getVisibleContacts();
 
-    if (parsedContacts) {
-      this.setState({ contacts: parsedContacts });
-    } else {
-      this.setState({ contacts: startContacts });
-    }
-  }
-
-  // componentDidUpdate
-
-  componentDidUpdate(prevProps, prevState) {
-    if (this.state.contacts !== prevState.contacts) {
-      localStorage.setItem('contacts', JSON.stringify(this.state.contacts));
-    }
-  }
-
-  render() {
-    const { filter, contacts } = this.state;
-    const filteredContacts = this.getVisibleContacts();
-
-    return (
-      <>
-        <Section title="Phonebook">
-          <ContactForm onSubmit={this.addContact} />
-        </Section>
-        <Section title="Contacts">
-          {contacts.length === 0 ? (
-            <Notification message="No contacts found." />
-          ) : (
-            <>
-              <Filter value={filter} onChange={this.changeFilter} />
-              <ContactList
-                contacts={filteredContacts}
-                onDeleteContact={this.deleteContact}
-              />{' '}
-            </>
-          )}
-        </Section>
-      </>
-    );
-  }
+  return (
+    <>
+      <Section title="Phonebook">
+        <ContactForm onSubmit={addContact} />
+      </Section>
+      <Section title="Contacts">
+        {contacts.length === 0 ? (
+          <Notification message="No contacts found." />
+        ) : (
+          <>
+            <Filter value={filter} onChange={changeFilter} />
+            <ContactList
+              contacts={filteredContacts}
+              onDeleteContact={deleteContact}
+            />{' '}
+          </>
+        )}
+      </Section>
+    </>
+  );
 }
