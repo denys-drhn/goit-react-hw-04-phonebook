@@ -9,9 +9,8 @@ import startContacts from '../contacts.json';
 
 export function App() {
   const [contacts, setContacts] = useState(
-    JSON.parse(localStorage.getItem('contacts')) ??
-      localStorage.setItem('contacts', JSON.stringify(startContacts))
-  );
+    () => JSON.parse(localStorage.getItem('contacts')) ?? startContacts
+  ); // ?
   const [filter, setFilter] = useState('');
 
   //add contact + Alert =========================================
